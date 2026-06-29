@@ -1,0 +1,53 @@
+name: Build DiceCloud
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+  workflow_dispatch:
+
+jobs:
+  build-x86_64:
+    name: build-x86_64
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Meteor 2.16
+        run: curl https://install.meteor.com/ | sh
+
+      - name: Install npm dependencies
+        working-directory: app
+        run: meteor npm install
+
+      - name: Build production server bundle
+        working-directory: app
+        run: meteor build ../build --architecture os.linux.x86_64 --server-only
+
+      - name: Print bundle Node.js version
+        run: |
+          if [ -f build/bundle/.node_version.txt ]; then
+            echo "Bundle Node.js version:"
+            cat build/bundle/.node_version.txt
+          else
+            echo "Bundle .node_version.txt not found; Meteor Node.js version:"
+            meteor node --version
+          fi
+
+      - name: Create bundle tarball
+        run: tar -czf dicecloud-os.linux.x86_64-server.tar.gz -C build .
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dicecloud-os.linux.x86_64-server
+          path: dicecloud-os.linux.x86_64-server.tar.gz
+          if-no-files-found: error
