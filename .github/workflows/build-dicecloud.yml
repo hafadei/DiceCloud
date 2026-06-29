@@ -30,7 +30,7 @@ jobs:
 
       - name: Build production server bundle
         working-directory: app
-        run: meteor build ../build --architecture os.linux.x86_64 --server-only
+        run: meteor build ../build --architecture os.linux.x86_64
 
       - name: Print bundle Node.js version
         run: |
